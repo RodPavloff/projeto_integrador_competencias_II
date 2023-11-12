@@ -1,0 +1,4 @@
+requirements.txt
+_build/*
+docs/*
+img/*
