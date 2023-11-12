@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="pt" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cup App &mdash; Documentação Projeto Integrador de Competencias II 2023-12-01</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=20ea9470"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../_static/translations.js?v=3b002d5c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="../genindex.html" />
+    <link rel="search" title="Pesquisar" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Projeto Integrador de Competencias II
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Pesquisar docs" aria-label="Pesquisar docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Menu de navegação">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">Cup App</a></li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Menu de navegação móvel" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Projeto Integrador de Competencias II</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Navegação da página">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Cup App</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/app/mcv.rst.txt" rel="nofollow"> Ver código-fonte da página</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cup-app">
+<h1>Cup App<a class="headerlink" href="#cup-app" title="Link to this heading"></a></h1>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 2</span><span class="sd">Desenvolvimento do Projeto de Loja Online de Cafés e Salgados utilizando Streamlit</span>
+<span class="linenos"> 3</span>
+<span class="linenos"> 4</span><span class="sd">O projeto em questão foi desenvolvido utilizando o framework Streamlit para criar a interface do usuário diretamente em Python, eliminando a necessidade de lidar diretamente com tecnologias como HTML, CSS e JavaScript, bem como estruturas de backend mais complexas, como Java, PHP ou C#.</span>
+<span class="linenos"> 5</span>
+<span class="linenos"> 6</span><span class="sd">O design pattern adotado para organizar o código foi o MVC (Model-View-Controller), uma abordagem comum que divide a aplicação em três componentes principais: Model (lógica de negócios), View (interface do usuário) e Controller (manipulação de entrada do usuário). Com o Streamlit, muitas dessas abstrações são tratadas de maneira simplificada, já que o próprio framework gerencia a relação entre a interface do usuário e a lógica de negócios.</span>
+<span class="linenos"> 7</span>
+<span class="linenos"> 8</span><span class="sd">O script principal, app.py, é responsável por criar a interface do usuário (View) e lidar com a lógica de negócios (Controller). Neste contexto, onde o projeto é de tamanho médio e a abordagem do Streamlit atende aos requisitos, a organização do código nesse único script pode ser considerada uma implementação simplificada do padrão MVC.</span>
+<span class="linenos"> 9</span>
+<span class="linenos">10</span><span class="sd">Para funcionalidades como esvaziar o carrinho e finalizar a compra, foram adicionados botões diretamente no script Streamlit. O carrinho e as informações do pedido são gerenciados usando a funcionalidade de estado de sessão do Streamlit.</span>
+<span class="linenos">11</span>
+<span class="linenos">12</span><span class="sd">Este approach simplificado se alinha ao escopo do projeto e proporciona uma implementação ágil e eficiente para a loja online de cafés e salgados, demonstrando a versatilidade e praticidade do Streamlit como uma ferramenta no-code para o desenvolvimento web.</span>
+<span class="linenos">13</span><span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Rodrigo M Pavloff.</p>
+  </div>
+
+  Compilado com <a href="https://www.sphinx-doc.org/">Sphinx</a> usando um
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    fornecido por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
