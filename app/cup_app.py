@@ -99,9 +99,13 @@ elif selected_page == "Salgados":
             st.write(f"**{product['name']}**")
             st.write(f"**{product['descricao']}**")
             st.write(f"Preço: R${product['price']:.2f}")
+
+            quantidade = st.number_input(f"Quantidade de {product['name']}", min_value=1, max_value=10, value=1, step=1)
             if st.button(f"Adicionar ao Carrinho - {product['name']}"):
-                # Adiciona item ao carrinho
-                st.session_state.carrinho.append(product)
+                # Adiciona item ao carrinho com a quantidade
+                product_copy = product.copy()
+                product_copy['quantidade'] = quantidade
+                st.session_state.carrinho.append(product_copy)
                 st.success(f"{product['name']} adicionado ao carrinho!")
 
 elif selected_page == "Doces":
@@ -123,9 +127,12 @@ elif selected_page == "Doces":
             st.write(f"**{product['name']}**")
             st.write(f"**{product['descricao']}**")
             st.write(f"Preço: R${product['price']:.2f}")
+            quantidade = st.number_input(f"Quantidade de {product['name']}", min_value=1, max_value=10, value=1, step=1)
             if st.button(f"Adicionar ao Carrinho - {product['name']}"):
-                # Adiciona item ao carrinho
-                st.session_state.carrinho.append(product)
+                # Adiciona item ao carrinho com a quantidade
+                product_copy = product.copy()
+                product_copy['quantidade'] = quantidade
+                st.session_state.carrinho.append(product_copy)
                 st.success(f"{product['name']} adicionado ao carrinho!")
 
 elif selected_page == "Conheça mais":
@@ -151,7 +158,6 @@ elif selected_page == "Carrinho":
     st.write("---")
     st.write(f"**Total: R${total:.2f}**")
 
-    # Botões
     if st.button("Esvaziar Carrinho"):
         # Esvazia o carrinho diretamente no estado
         st.session_state.carrinho = []
@@ -161,33 +167,40 @@ elif selected_page == "Carrinho":
 
     # Botão Finalizar Compra sempre disponível
     if st.button("Finalizar Compra"):
-        # Conectar ao banco de dados MySQL
-        conn = mysql.connector.connect(
-            host='127.0.0.1',
-            user='root',
-            password='root',
-            database='PIT_II'
-        )
-
         try:
+            # Conectar ao banco de dados MySQL
+            conn = mysql.connector.connect(
+                host='localhost',
+                user='root',
+                password='root',
+                database='PIT_II'
+            )
+
             with conn.cursor() as cursor:
-                # Inserir itens do carrinho na tabela de pedidos
+                # Inserir um novo pedido
                 cursor.execute('INSERT INTO Pedido (data) VALUES (NOW())')
                 id_pedido = cursor.lastrowid
 
+                # Inserir itens do carrinho na tabela de ItemPedido
                 for item in st.session_state.carrinho:
-                    cursor.execute('INSERT INTO ItemPedido (quantidade, id_pedido, id_produto) VALUES (%s, %s, %s)', (item.get('quantidade', 1), id_pedido, item.get('id_produto')))
+                    cursor.execute('INSERT INTO ItemPedido (quantidade, id_pedido, id_produto) VALUES (%s, %s, %s)',
+                                (item.get('quantidade', 1), id_pedido, item.get('id_produto')))
+            
+            # Commit (salvar) as alterações no banco de dados
+            conn.commit()
+
+            # Limpar o carrinho depois da compra
+            st.session_state.carrinho = []
+            st.success("Compra finalizada com sucesso! Um recibo será enviado para o seu e-mail.")
+
         except mysql.connector.Error as err:
             print(f"Erro MySQL: {err}")
+
         finally:
-            if cursor:
-                cursor.close()
+            # Fechar a conexão
             if conn:
                 conn.close()
-            # Limpar o carrinho depois da compra
-                st.session_state.carrinho = []
-                st.success("Compra finalizada com sucesso! Um recibo será enviado para o seu e-mail.")
-
+                
 else:
     st.title("Sobre Nós")
 
