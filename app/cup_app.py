@@ -1,6 +1,8 @@
 from flask import Flask, render_template
 import streamlit as st
-import sqlite3
+import mysql.connector
+import pymysql
+
 
 def initialize_session():
     """
@@ -64,10 +66,19 @@ elif selected_page == "Bebidas":
             st.write(f"**{product['name']}**")
             st.write(f"**{product['descricao']}**")
             st.write(f"Preço: R${product['price']:.2f}")
+
+            quantidade = st.number_input(f"Quantidade de {product['name']}", min_value=1, max_value=10, value=1, step=1)
             if st.button(f"Adicionar ao Carrinho - {product['name']}"):
-                # Adiciona item ao carrinho
-                st.session_state.carrinho.append(product)
+                # Adiciona item ao carrinho com a quantidade
+                product_copy = product.copy()
+                product_copy['quantidade'] = quantidade
+                st.session_state.carrinho.append(product_copy)
                 st.success(f"{product['name']} adicionado ao carrinho!")
+
+            # if st.button(f"Adicionar ao Carrinho - {product['name']}"):
+            #     # Adiciona item ao carrinho
+            #     st.session_state.carrinho.append(product)
+            #     st.success(f"{product['name']} adicionado ao carrinho!")
 
 elif selected_page == "Salgados":
     st.title("Todos os produtos são de Fabricação Própria.")
@@ -132,7 +143,7 @@ elif selected_page == "Carrinho":
     st.title("Seu Carrinho de Compras")
 
     # Exibir produtos
-    produtos_tabela = [{"Produto": item['name'], "Valor": f"R${item['price']:.2f}"} for item in st.session_state.carrinho]
+    produtos_tabela = [{"Produto": item['name'], "Valor": f"R${item['price']:.2f}", "Quantidade": item.get('quantidade', 1)} for item in st.session_state.carrinho]
     st.table(data=produtos_tabela)
 
     # Total
@@ -142,29 +153,40 @@ elif selected_page == "Carrinho":
 
     # Botões
     if st.button("Esvaziar Carrinho"):
-        # Reinicia o aplicativo para exibir a atualização
+        # Esvazia o carrinho diretamente no estado
         st.session_state.carrinho = []
-        st.experimental_rerun()
 
-    elif st.button("Finalizar Compra"):
-        if not st.session_state.carrinho:
-            st.warning("Carrinho vazio. Adicione itens antes de finalizar a compra.")
-        else:
-            # Conectar ao banco de dados SQLite
-            conn = sqlite3.connect('minhaloja.db')
-            cursor = conn.cursor()
+    if not st.session_state.carrinho:
+        st.warning("Carrinho vazio. Adicione itens antes de finalizar a compra.")
 
-            # Inserir itens do carrinho na tabela de pedidos
-            for item in st.session_state.carrinho:
-                cursor.execute('''INSERT INTO pedidos (produto, valor) VALUES (?, ?)''', (item['name'], item['price']))
+    # Botão Finalizar Compra sempre disponível
+    if st.button("Finalizar Compra"):
+        # Conectar ao banco de dados MySQL
+        conn = mysql.connector.connect(
+            host='127.0.0.1',
+            user='root',
+            password='root',
+            database='PIT_II'
+        )
 
-            # Salvar (commit) as alterações e fechar a conexão
-            conn.commit()
-            conn.close()
+        try:
+            with conn.cursor() as cursor:
+                # Inserir itens do carrinho na tabela de pedidos
+                cursor.execute('INSERT INTO Pedido (data) VALUES (NOW())')
+                id_pedido = cursor.lastrowid
 
-            # Limpa o carrinho depois da compra
-            st.session_state.carrinho = []
-            st.success("Compra finalizada com sucesso! Um recibo será enviado para o seu e-mail.")
+                for item in st.session_state.carrinho:
+                    cursor.execute('INSERT INTO ItemPedido (quantidade, id_pedido, id_produto) VALUES (%s, %s, %s)', (item.get('quantidade', 1), id_pedido, item.get('id_produto')))
+        except mysql.connector.Error as err:
+            print(f"Erro MySQL: {err}")
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+            # Limpar o carrinho depois da compra
+                st.session_state.carrinho = []
+                st.success("Compra finalizada com sucesso! Um recibo será enviado para o seu e-mail.")
 
 else:
     st.title("Sobre Nós")
