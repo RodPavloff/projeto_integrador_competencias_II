@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+# from flask import Flask, render_template
 import streamlit as st
 import mysql.connector
 import pymysql
@@ -90,6 +90,15 @@ def authenticate_user(username, password):
 
     return True
 
+def connect_to_database():
+    """ abre conexao com database no mysql"""
+    return mysql.connector.connect(
+        host='localhost',
+        user='root',
+        password='root',
+        database='PIT_II'
+    )
+
 # Configuração da barra superior
 st.set_page_config(
     page_title="Duck'n Coffee",
@@ -140,7 +149,24 @@ elif selected_page == "Bebidas":
     ]
 
     # Exibir os produtos em colunas
+    # col1, col2, col3 = st.columns(3)
+    # for i, product in enumerate(products):
+    #     with col1 if i % 3 == 0 else col2 if i % 3 == 1 else col3:
+    #         st.image(product["image"], use_column_width=True)
+    #         st.write(f"**{product['name']}**")
+    #         st.write(f"**{product['descricao']}**")
+    #         st.write(f"Preço: R${product['price']:.2f}")
+
+    #         quantidade = st.number_input(f"Quantidade de {product['name']}", min_value=1, max_value=10, value=1, step=1)
+    #         if st.button(f"Adicionar ao Carrinho - {product['name']}"):
+    #             # Adiciona item ao carrinho com a quantidade
+    #             product_copy = product.copy()
+    #             product_copy['quantidade'] = quantidade
+    #             st.session_state.carrinho.append(product_copy)
+    #             st.success(f"{product['name']} adicionado ao carrinho!")
+
     col1, col2, col3 = st.columns(3)
+
     for i, product in enumerate(products):
         with col1 if i % 3 == 0 else col2 if i % 3 == 1 else col3:
             st.image(product["image"], use_column_width=True)
@@ -149,12 +175,32 @@ elif selected_page == "Bebidas":
             st.write(f"Preço: R${product['price']:.2f}")
 
             quantidade = st.number_input(f"Quantidade de {product['name']}", min_value=1, max_value=10, value=1, step=1)
+
             if st.button(f"Adicionar ao Carrinho - {product['name']}"):
-                # Adiciona item ao carrinho com a quantidade
-                product_copy = product.copy()
-                product_copy['quantidade'] = quantidade
-                st.session_state.carrinho.append(product_copy)
-                st.success(f"{product['name']} adicionado ao carrinho!")
+                # Conectar ao banco de dados
+                conn = connect_to_database()
+
+                try:
+                    # Adiciona item ao carrinho com a quantidade
+                    product_copy = product.copy()
+
+                    # Busca o id_produto do produto no banco de dados
+                    with conn.cursor() as cursor:
+                        cursor.execute('SELECT id_produto FROM Produto WHERE nome=%s', (product['name'],))
+                        id_produto = cursor.fetchone()
+
+                    product_copy['quantidade'] = quantidade
+                    product_copy['id_produto'] = id_produto[0] if id_produto else None  # Se não encontrar, pode ser None
+                    st.session_state.carrinho.append(product_copy)
+                    st.success(f"{product['name']} adicionado ao carrinho!")
+
+                except mysql.connector.Error as err:
+                    print(f"Erro MySQL: {err}")
+
+                finally:
+                    # Fechar a conexão
+                    if conn:
+                        conn.close()
 
 
 elif selected_page == "Salgados":
@@ -273,8 +319,9 @@ elif selected_page == "Carrinho":
 elif selected_page == "Login / Cadastro":
     st.title("Login / Cadastro")
 
-    login_username = st.text_input("Nome de Usuário:")
-    login_password = st.text_input("Senha:", type="password")
+    # Formulário de login
+    login_username = st.text_input("Nome de Usuário (Login):")
+    login_password = st.text_input("Senha (Login):", type="password")
 
     if st.button("Login"):
         if authenticate_user(login_username, login_password):
@@ -286,8 +333,22 @@ elif selected_page == "Login / Cadastro":
             st.rerun()
 
         else:
-            print("Falha no login. Verifique seu nome de usuário e senha.")
             st.warning("Falha no login. Verifique seu nome de usuário e senha.")
+
+    st.write("\n\n---\n\n")
+    st.write("\n\n---\n\n")
+    # Formulário de cadastro
+    register_username = st.text_input("Nome de Usuário (Cadastro):", key="register_username")
+    register_email = st.text_input("Email (Cadastro):", key="register_email")
+    register_password = st.text_input("Senha (Cadastro):", type="password", key="register_password")
+
+    if st.button("Registrar"):
+        # Chama a função para criar um novo usuário
+        if create_user(register_username, register_email, register_password):
+            st.success(f"Usuário '{register_username}' registrado com sucesso! Faça login agora.")
+        else:
+            st.warning("Falha ao registrar o usuário. Por favor, escolha outro nome de usuário e verifique os detalhes.")
+
 
 else:
     st.title("Sobre Nós")
