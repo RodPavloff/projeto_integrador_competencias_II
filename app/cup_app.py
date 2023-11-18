@@ -2,7 +2,7 @@ from flask import Flask, render_template
 import streamlit as st
 import mysql.connector
 import pymysql
-
+import hashlib as hl
 
 def initialize_session():
     """
@@ -17,20 +17,101 @@ def calcular_total(carrinho):
     """
     return sum(item['price'] for item in carrinho)
 
+def create_user(username, email, password):
+    # Conectar ao banco de dados MySQL
+    conn = mysql.connector.connect(
+        host='localhost',
+        user='root',
+        password='root',
+        database='PIT_II'
+    )
+
+    try:
+        with conn.cursor() as cursor:
+            # Verificar se o usuário já existe
+            cursor.execute('SELECT id_cliente FROM cliente WHERE nome=%s', (username,))
+            existing_user = cursor.fetchone()
+
+            if existing_user:
+                st.error("Usuário já existe. Por favor, escolha outro nome.")
+                return False
+
+            # Criar um novo usuário
+            hashed_password = hl.sha256(password.encode()).hexdigest()
+            cursor.execute('INSERT INTO cliente (nome, email, senha) VALUES (%s, %s, %s)', (username, email, hashed_password))
+            st.success(f"Usuário '{username}' criado com sucesso!")
+
+    except mysql.connector.Error as err:
+        st.error(f"Erro MySQL: {err}")
+        return False
+
+    finally:
+        # Commit e fechar a conexão
+        conn.commit()
+        conn.close()
+
+    return True
+
+def authenticate_user(username, password):
+    # Conectar ao banco de dados MySQL
+    conn = mysql.connector.connect(
+        host='localhost',
+        user='root',
+        password='root',
+        database='PIT_II'
+    )
+
+    try:
+        with conn.cursor() as cursor:
+            # Buscar usuário por nome
+            cursor.execute('SELECT id_cliente, senha FROM cliente WHERE nome=%s', (username,))
+            user_data = cursor.fetchone()
+
+            if not user_data:
+                # Remova esta linha para permitir login para usuários não cadastrados
+                # st.error("Usuário não encontrado. Por favor, verifique o nome.")
+                pass
+
+            # Verificar senha
+            hashed_password = hl.sha256(password.encode()).hexdigest()
+            if hashed_password != user_data[1]:
+                st.error("Senha incorreta. Por favor, tente novamente.")
+                return False
+
+            st.success(f"Login bem-sucedido! Bem-vindo, {username}!")
+
+    except mysql.connector.Error as err:
+        st.error(f"Erro MySQL: {err}")
+        return False
+
+    finally:
+        # Fechar a conexão
+        conn.close()
+
+    return True
+
 # Configuração da barra superior
 st.set_page_config(
     page_title="Duck'n Coffee",
     page_icon="../img/icone.jpeg"
 )
 
-# Barra de navegação - Imagem do café
-# user_image = st.sidebar.image("../img/dunkn_Coffee_0.jpg", width=250) # TIRAR
-
-st.sidebar.title("Menu")
-selected_page = st.sidebar.radio("Selecione uma página", ["Início", "Bebidas", "Salgados", "Doces", "Conheça mais", "Carrinho", "Sobre nós"])
-
 # Inicializar a sessão
 initialize_session()
+
+# Variável para armazenar o nome do usuário logado
+logged_in_username = None
+
+st.sidebar.title("Menu")
+
+# Se já houver um usuário logado, exiba a mensagem de boas-vindas
+if 'logged_in_username' not in st.session_state:
+    st.session_state.logged_in_username = None
+
+if st.session_state.logged_in_username:
+    st.sidebar.write(f"Bem-vindo, {st.session_state.logged_in_username}!")
+
+selected_page = st.sidebar.radio("Selecione uma página", ["Início", "Bebidas", "Salgados", "Doces", "Conheça mais", "Carrinho", "Sobre nós", "Login / Cadastro"])
 
 # Seção do corpo principal
 if selected_page == "Início":
@@ -75,10 +156,6 @@ elif selected_page == "Bebidas":
                 st.session_state.carrinho.append(product_copy)
                 st.success(f"{product['name']} adicionado ao carrinho!")
 
-            # if st.button(f"Adicionar ao Carrinho - {product['name']}"):
-            #     # Adiciona item ao carrinho
-            #     st.session_state.carrinho.append(product)
-            #     st.success(f"{product['name']} adicionado ao carrinho!")
 
 elif selected_page == "Salgados":
     st.title("Todos os produtos são de Fabricação Própria.")
@@ -158,14 +235,6 @@ elif selected_page == "Carrinho":
     st.write("---")
     st.write(f"**Total: R${total:.2f}**")
 
-    if st.button("Esvaziar Carrinho"):
-        # Esvazia o carrinho diretamente no estado
-        st.session_state.carrinho = []
-
-    if not st.session_state.carrinho:
-        st.warning("Carrinho vazio. Adicione itens antes de finalizar a compra.")
-
-    # Botão Finalizar Compra sempre disponível
     if st.button("Finalizar Compra"):
         try:
             # Conectar ao banco de dados MySQL
@@ -200,7 +269,26 @@ elif selected_page == "Carrinho":
             # Fechar a conexão
             if conn:
                 conn.close()
-                
+
+elif selected_page == "Login / Cadastro":
+    st.title("Login / Cadastro")
+
+    login_username = st.text_input("Nome de Usuário:")
+    login_password = st.text_input("Senha:", type="password")
+
+    if st.button("Login"):
+        if authenticate_user(login_username, login_password):
+            # Atribui o nome do usuário logado à variável de estado
+            st.session_state.logged_in_username = login_username
+            st.success(f"Login bem-sucedido! Bem-vindo, {st.session_state.logged_in_username}!")
+
+            # Força a reinicialização da página após o login
+            st.rerun()
+
+        else:
+            print("Falha no login. Verifique seu nome de usuário e senha.")
+            st.warning("Falha no login. Verifique seu nome de usuário e senha.")
+
 else:
     st.title("Sobre Nós")
 
